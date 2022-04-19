@@ -2,17 +2,17 @@ import { BehaviorSubject, distinctUntilChanged, map, TSyncObservable } from "../
 import { pipe } from "../utils/pipe"
 
 /**
- * 
+ * Simple & flexible store implementation
  * @example
  * type Data = {
  *   users: {a: string}[],
  *   else: Record<string, {name: string}>
  * }
  * const store = new Store<Data>({users: [], else: {1: {name: 'hello'}}})
- * const x = store.get(v => v.else[1]).value()
+ * const user = store.get(v => v.else[1]).value()
  * store.set((val) => ({...val, else: {}}))
  */
-export class Store<T extends Record<string, unknown>> {
+export class Store<T> {
   private value$: BehaviorSubject<T>
   constructor(value: T) {
     this.value$ = new BehaviorSubject(value)
@@ -22,10 +22,10 @@ export class Store<T extends Record<string, unknown>> {
     return pipe(this.value$, map(getter), distinctUntilChanged())
   }
 
-  public set(valueOrUpdate: T | ((value: T) => T)): void {
+  public set(valueOrUpdate: Exclude<T, Function> | ((value: T) => T)): void {
     const oldValue = this.value$.value()
     
-    const newValue = typeof valueOrUpdate === 'function'
+    const newValue = isUpdater(valueOrUpdate)
       ? valueOrUpdate(oldValue)
       : valueOrUpdate
 
@@ -37,3 +37,8 @@ export class Store<T extends Record<string, unknown>> {
 
 const identity = <T>(value: T): T => value
 
+const isUpdater = <T>(
+  value: T | ((arg: T) => T)
+): value is ((arg: T) => T) => {
+  return typeof value === 'function'
+}

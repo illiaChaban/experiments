@@ -3,17 +3,7 @@ import { pipe } from "../../utils/pipe"
 import { Store } from "../../store"
 import { useConst, useLatest } from "./helpers"
 
-import React, {useRef, useState, useEffect} from 'react'
-
-type Values = {}
-export const StoreContextProvider = ({children}) => {
-  const store = useStore<Values>({})
-  return (
-    <StoreContext.Provider value={{update: store.update, useLens: makeUseLens(store)}}>
-      {children}
-    </StoreContext.Provider>
-  )
-}
+import React,{useRef, useState, useEffect} from 'react'
 
 const useMakeWatch = <T,>(store: Store<T>) => {
   const useWatch = useConst(<U,>(path: string[]) => {
@@ -63,6 +53,18 @@ const makeUseLens = <T,>(store: Store<T>) => {
 
 
 const useStore = <T,>(values: T): Store<T> => {
-  const {current: store} = useRef(new Store<Values>({}))
+  const {current: store} = useRef(new Store<T>(values))
   return store
+}
+
+
+
+type Values = {}
+export const StoreContextProvider = ({children}) => {
+  const store = useStore<Values>({})
+  return (
+    <StoreContext.Provider value={{update: store.update, useLens: makeUseLens(store)}}>
+      {children}
+    </StoreContext.Provider>
+  )
 }
